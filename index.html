@@ -3,42 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy NES Mobile</title>
+    <title>Flappy NES Mobile Style</title>
     <style>
-        /* --- CONFIGURATION DE L'ÉCRAN --- */
+        /* --- 1. CONFIGURATION GÉNÉRALE --- */
         body {
             margin: 0;
             padding: 0;
-            background-color: #000; /* Fond noir total */
-            color: white;
+            background-color: #000;
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* Empêche le scroll */
+            overflow: hidden;
             touch-action: none;
-        }
-
-        #game-container {
-            width: 100%;
-            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* On colle le jeu tout en haut */
-            align-items: center;
         }
 
-        /* --- L'ASTUCE POUR LES BOUTONS --- */
-        #game {
-            width: 100% !important;
-            height: 100% !important;
+        /* --- 2. LA ZONE DU JEU (HAUT) --- */
+        #game-container {
+            width: 100%;
+            height: 55vh; /* Le jeu prend 55% de la hauteur */
+            display: flex;
+            justify-content: center;
+            align-items: flex-end; /* On le colle au bas de sa zone */
+            background: #000;
+            border-bottom: 4px solid #222; /* Petite séparation */
+            position: relative;
+            z-index: 2; /* Le jeu est au-dessus */
         }
+
+        #game { width: 100% !important; height: 100% !important; }
         
-        /* On cible l'écran vidéo à l'intérieur de l'émulateur */
+        /* Force l'image du jeu à bien remplir sa zone sans déborder */
         #game canvas {
-            max-height: 55vh !important; /* Limite la hauteur de l'écran de jeu (55%) */
-            margin-top: 20px !important; /* Une petite marge en haut */
+            max-height: 100% !important;
+            max-width: 100% !important;
             object-fit: contain !important;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); /* Petit effet lumineux */
-            background-color: #000;
+            margin: 0 !important;
+        }
+
+        /* --- 3. LA MANETTE NES EN CSS (BAS) --- */
+        /* C'est juste du dessin pour faire joli dessous les vrais boutons */
+        .nes-controller-art {
+            height: 45vh; /* Prend le reste de la place en bas */
+            width: 100%;
+            background: #b8b8b8; /* Gris NES classique */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            position: relative;
+            border-top: 4px solid #d4d4d4; /* Effet de biseau */
+            box-shadow: inset 0 -10px 30px rgba(0,0,0,0.3); /* Ombre interne */
+        }
+
+        /* La bande noire centrale */
+        .nes-middle-stripe {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%; height: 35%;
+            background: #2a2a2a;
+            border-radius: 4px;
+            border: 3px solid #707070;
+        }
+
+        /* Le D-PAD (Croix directionnelle) */
+        .nes-dpad-art {
+            width: 100px; height: 100px;
+            position: relative;
+            z-index: 1;
+        }
+        .dpad-h, .dpad-v {
+            position: absolute; background: #111; border: 2px solid #555; border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+        }
+        .dpad-h { width: 100%; height: 33%; top: 33.5%; left: 0; }
+        .dpad-v { height: 100%; width: 33%; left: 33.5%; top: 0; }
+        .dpad-center { 
+            position: absolute; width: 33%; height: 33%; top: 33.5%; left: 33.5%; 
+            background: #222; border-radius: 50%; z-index: 2;
+        }
+
+        /* Les Boutons A et B */
+        .nes-buttons-art {
+            display: flex; gap: 15px; z-index: 1;
+            transform: rotate(-15deg); /* Petite inclinaison classique */
+        }
+        .nes-btn {
+            width: 60px; height: 60px;
+            background: #df0000; /* Rouge NES */
+            border-radius: 50%;
+            border: 4px solid #2a2a2a;
+            box-shadow: inset 3px 3px 10px rgba(255,255,255,0.3), 3px 3px 5px rgba(0,0,0,0.5);
+        }
+
+        /* Select et Start au milieu */
+        .nes-center-btns-art {
+            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
+            display: flex; gap: 15px; z-index: 1;
+        }
+        .nes-thin-btn {
+            width: 30px; height: 10px;
+            background: #111; border: 2px solid #555;
+            border-radius: 6px; transform: rotate(-15deg);
         }
     </style>
 </head>
@@ -48,20 +116,37 @@
         <div id="game"></div>
     </div>
 
+    <div class="nes-controller-art">
+        <div class="nes-middle-stripe"></div>
+        <div class="nes-dpad-art">
+            <div class="dpad-h"></div><div class="dpad-v"></div><div class="dpad-center"></div>
+        </div>
+        <div class="nes-center-btns-art">
+            <div class="nes-thin-btn"></div><div class="nes-thin-btn"></div>
+        </div>
+        <div class="nes-buttons-art">
+            <div class="nes-btn"></div><div class="nes-btn"></div>
+        </div>
+    </div>
+
     <script>
         window.EJS_player = '#game';
-        
-        // CHANGEMENT ICI : 'nes' car c'est un fichier Nintendo NES
         window.EJS_core = 'nes'; 
-        
-        // LE NOM EXACT DE TON FICHIER
         window.EJS_gameUrl = 'flappy.nes'; 
-        
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
         window.EJS_startOnLoaded = true;
+        
+        // Configuration pour rendre les boutons de l'émulateur
+        // plus discrets pour qu'ils se fondent dans notre dessin.
+        window.EJS_btns = {
+            'color': 'rgba(255,255,255,0.1)', // Presque transparents
+            'strokeColor': 'rgba(0,0,0,0.2)',
+            'size': 80 // Taille des zones tactiles
+        };
     </script>
 
     <script src="https://cdn.emulatorjs.org/latest/data/loader.js"></script>
 
 </body>
 </html>
+
