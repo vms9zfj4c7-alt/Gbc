@@ -2,27 +2,43 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tetris GBC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy NES Mobile</title>
     <style>
+        /* --- CONFIGURATION DE L'ÉCRAN --- */
         body {
             margin: 0;
             padding: 0;
-            background-color: #202020;
+            background-color: #000; /* Fond noir total */
             color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             height: 100vh;
-            font-family: sans-serif;
+            width: 100vw;
+            overflow: hidden; /* Empêche le scroll */
+            touch-action: none;
         }
+
         #game-container {
             width: 100%;
-            max-width: 400px;
-            aspect-ratio: 10/9;
-            background: #000;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* On colle le jeu tout en haut */
+            align-items: center;
+        }
+
+        /* --- L'ASTUCE POUR LES BOUTONS --- */
+        #game {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        /* On cible l'écran vidéo à l'intérieur de l'émulateur */
+        #game canvas {
+            max-height: 55vh !important; /* Limite la hauteur de l'écran de jeu (55%) */
+            margin-top: 20px !important; /* Une petite marge en haut */
+            object-fit: contain !important;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); /* Petit effet lumineux */
+            background-color: #000;
         }
     </style>
 </head>
@@ -35,22 +51,17 @@
     <script>
         window.EJS_player = '#game';
         
-        // CHANGEMENT 1 : On utilise le moteur GBA (plus fiable)
-        // Il lit parfaitement les jeux .gbc
-        window.EJS_core = 'gba'; 
+        // CHANGEMENT ICI : 'nes' car c'est un fichier Nintendo NES
+        window.EJS_core = 'nes'; 
         
-        // Assurez-vous que votre fichier s'appelle bien Tetris.gbc sur GitHub
-        window.EJS_gameUrl = 'Tetris.gbc'; 
+        // LE NOM EXACT DE TON FICHIER
+        window.EJS_gameUrl = 'flappy.nes'; 
         
-        // CHANGEMENT 2 : On utilise le lien 'latest' au lieu de 'stable'
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
-        
         window.EJS_startOnLoaded = true;
-        window.EJS_DEBUG_XX = true; // Aide à voir les erreurs si besoin
     </script>
 
     <script src="https://cdn.emulatorjs.org/latest/data/loader.js"></script>
 
 </body>
 </html>
-
