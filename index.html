@@ -3,126 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Flappy NES Real</title>
+    <title>NES Mobile V14</title>
     <style>
-        /* --- 1. CONFIGURATION ÉCRAN --- */
+        /* --- 1. STRUCTURE GLOBALE --- */
         body {
             margin: 0; padding: 0;
             background-color: #000;
             height: 100vh; width: 100vw;
-            overflow: hidden;
-            display: flex; flex-direction: column;
-            touch-action: none;
+            overflow: hidden; /* Pas de scroll */
+            display: flex;
+            flex-direction: column; /* Empile Haut (Jeu) et Bas (Manette) */
+            touch-action: none; /* Pas de zoom tactile */
             user-select: none;
             -webkit-user-select: none;
+            font-family: sans-serif;
         }
 
-        /* --- 2. ZONE DE JEU (HAUT 50%) --- */
-        #game-container {
+        /* --- 2. ÉCRAN DE JEU (HAUT - 60%) --- */
+        #game-wrapper {
+            flex: 6; /* Prend 60% de la hauteur */
             width: 100%;
-            height: 50vh; /* Moitié haut */
             background: #000;
-            display: flex; justify-content: center; align-items: flex-end;
-            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 4px solid #333;
+            position: relative;
             z-index: 1;
         }
-        #game { width: 100% !important; height: 100% !important; }
+        #game { width: 100%; height: 100%; }
+        /* Force l'image à rester dans la zone du haut */
         #game canvas {
             max-width: 100% !important;
             max-height: 100% !important;
             object-fit: contain !important;
         }
 
-        /* --- 3. MANETTE RÉALISTE (BAS 50%) --- */
-        #controller-area {
-            position: relative;
+        /* --- 3. MANETTE (BAS - 40%) --- */
+        #controller-wrapper {
+            flex: 4; /* Prend 40% de la hauteur */
             width: 100%;
-            height: 50vh; /* Moitié bas */
-            background-color: #1a1a1a;
-            /* IMAGE DE LA MANETTE NES */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/8/83/Nintendo-Famicom-Controller-I-FL.jpg');
-            background-size: 100% 100%; /* Étire l'image pour remplir le bas */
-            background-position: center;
-            background-repeat: no-repeat;
+            background-color: #dcdcdc; /* Gris NES */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 5%;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.2);
         }
 
-        /* --- 4. ZONES TACTILES (BOUTONS INVISIBLES) --- */
-        .touch-btn {
-            position: absolute;
-            z-index: 100;
-            cursor: pointer;
-            /* POUR LE TEST : Rouge transparent. METTRE opacity: 0 POUR RENDRE INVISIBLE */
-            background-color: rgba(255, 0, 0, 0.3); 
-            border: 1px solid yellow;
-            border-radius: 10%;
-        }
-
-        /* POSITIONNEMENT PRÉCIS DES BOUTONS SUR L'IMAGE */
-        /* Croix */
-        #dpad-up { top: 18%; left: 16%; width: 10%; height: 12%; }
-        #dpad-down { top: 42%; left: 16%; width: 10%; height: 12%; }
-        #dpad-left { top: 30%; left: 6%; width: 10%; height: 12%; }
-        #dpad-right { top: 30%; left: 26%; width: 10%; height: 12%; }
+        /* --- 4. DESIGN DES BOUTONS --- */
         
-        /* Select / Start */
-        #btn-select { top: 40%; left: 42%; width: 12%; height: 10%; }
-        #btn-start { top: 40%; left: 56%; width: 12%; height: 10%; }
+        /* CROIX (D-PAD) */
+        .dpad-container {
+            position: relative;
+            width: 120px; height: 120px;
+        }
+        .dpad-btn {
+            position: absolute;
+            background-color: #222;
+            border: 1px solid #000;
+            border-radius: 4px;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+        .dpad-btn:active { background-color: #555; transform: scale(0.95); }
+        
+        /* Forme de la croix */
+        #btn-up { top: 0; left: 40px; width: 40px; height: 40px; }
+        #btn-down { bottom: 0; left: 40px; width: 40px; height: 40px; }
+        #btn-left { top: 40px; left: 0; width: 40px; height: 40px; }
+        #btn-right { top: 40px; right: 0; width: 40px; height: 40px; }
+        .dpad-center { 
+            position: absolute; top: 40px; left: 40px; width: 40px; height: 40px; 
+            background-color: #222; z-index: 2; /* Cache les jointures */
+        }
 
-        /* A / B */
-        #btn-b { top: 35%; left: 70%; width: 12%; height: 16%; border-radius: 50%; }
-        #btn-a { top: 35%; left: 84%; width: 12%; height: 16%; border-radius: 50%; }
+        /* SELECT / START (Milieu) */
+        .middle-container {
+            display: flex; gap: 15px;
+            position: absolute; left: 50%; top: 60%;
+            transform: translate(-50%, -50%);
+        }
+        .pill-btn {
+            width: 50px; height: 15px;
+            background-color: #222;
+            border-radius: 10px;
+            border: 2px solid #555;
+            transform: rotate(-15deg);
+        }
+        .pill-btn:active { background-color: #555; }
+        .label {
+            position: absolute; top: -20px; width: 100%; text-align: center;
+            color: #d40000; font-weight: bold; font-size: 10px; letter-spacing: 1px;
+            transform: rotate(-15deg);
+        }
+
+        /* BOUTONS A / B (Droite) */
+        .action-container {
+            width: 120px; height: 120px;
+            position: relative;
+        }
+        .round-btn {
+            width: 55px; height: 55px;
+            background-color: #d40000; /* Rouge NES */
+            border-radius: 50%;
+            position: absolute;
+            border: 2px solid #fff; /* Petit effet plastique */
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.3);
+        }
+        .round-btn:active { background-color: #ff4d4d; transform: scale(0.95); box-shadow: 1px 1px 0px rgba(0,0,0,0.3); }
+        .round-btn::after {
+            content: attr(data-label); /* Affiche A ou B */
+            position: absolute; bottom: -20px; right: 0;
+            color: #d40000; font-weight: bold; font-size: 14px; width: 100%; text-align: center;
+        }
+
+        #btn-b { bottom: 10px; left: 0; }
+        #btn-a { bottom: 25px; right: 0; }
 
     </style>
 </head>
 <body>
 
-    <div id="game-container">
+    <div id="game-wrapper">
         <div id="game"></div>
     </div>
 
-    <div id="controller-area">
-        <div id="dpad-up" class="touch-btn" data-key="38"></div>
-        <div id="dpad-down" class="touch-btn" data-key="40"></div>
-        <div id="dpad-left" class="touch-btn" data-key="37"></div>
-        <div id="dpad-right" class="touch-btn" data-key="39"></div>
+    <div id="controller-wrapper">
         
-        <div id="btn-select" class="touch-btn" data-key="16"></div> <div id="btn-start" class="touch-btn" data-key="13"></div>  <div id="btn-b" class="touch-btn" data-key="90"></div>      <div id="btn-a" class="touch-btn" data-key="88"></div>      </div>
+        <div class="dpad-container">
+            <div class="dpad-center"></div>
+            <div id="btn-up" class="dpad-btn" data-key="38"></div>
+            <div id="btn-left" class="dpad-btn" data-key="37"></div>
+            <div id="btn-right" class="dpad-btn" data-key="39"></div>
+            <div id="btn-down" class="dpad-btn" data-key="40"></div>
+        </div>
+
+        <div class="middle-container">
+            <div style="position:relative;">
+                <div class="label">SELECT</div>
+                <div id="btn-select" class="pill-btn" data-key="16"></div>
+            </div>
+            <div style="position:relative;">
+                <div class="label">START</div>
+                <div id="btn-start" class="pill-btn" data-key="13"></div>
+            </div>
+        </div>
+
+        <div class="action-container">
+            <div id="btn-b" class="round-btn" data-key="90" data-label="B"></div>
+            <div id="btn-a" class="round-btn" data-key="88" data-label="A"></div>
+        </div>
+
+    </div>
 
     <script>
-        // --- 1. CONFIG EMULATEUR ---
+        // CONFIG EMULATEUR
         window.EJS_player = '#game';
         window.EJS_core = 'nes';
         window.EJS_gameUrl = 'flappy.nes';
         window.EJS_pathtodata = 'https://cdn.emulatorjs.org/latest/data/';
         window.EJS_startOnLoaded = true;
-        // On cache les boutons par défaut de l'émulateur car on utilise les nôtres
-        window.EJS_btns = false; 
+        window.EJS_btns = false; // On désactive les boutons par défaut
 
-        // --- 2. GESTION DU TACTILE ---
-        // Cette fonction transforme nos touches tactiles en appui clavier pour l'émulateur
+        // GESTION TACTILE
         function simulateKey(code, type) {
-            const event = new KeyboardEvent(type, {
+            window.dispatchEvent(new KeyboardEvent(type, {
                 bubbles: true, cancelable: true, keyCode: code, which: code
-            });
-            window.dispatchEvent(event);
+            }));
         }
 
-        // On attache les événements à tous les boutons rouges
-        document.querySelectorAll('.touch-btn').forEach(btn => {
+        // On attache les événements à tous les éléments qui ont "data-key"
+        document.querySelectorAll('[data-key]').forEach(btn => {
             const code = parseInt(btn.getAttribute('data-key'));
             
-            // Quand on touche
             btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // Empêche le zoom/scroll
+                e.preventDefault();
                 simulateKey(code, 'keydown');
-                btn.style.backgroundColor = "rgba(0, 255, 0, 0.5)"; // Devient vert quand touché
+                // Petit effet visuel JS (optionnel car CSS :active gère déjà)
             }, {passive: false});
 
-            // Quand on relâche
             btn.addEventListener('touchend', (e) => {
                 e.preventDefault();
                 simulateKey(code, 'keyup');
-                btn.style.backgroundColor = "rgba(255, 0, 0, 0.3)"; // Redevient rouge
             }, {passive: false});
         });
     </script>
